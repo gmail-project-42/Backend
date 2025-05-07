@@ -3,10 +3,10 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 import os
+from dotenv import load_dotenv
 
 
-list_of_daily_mails, service = return_mails_and_service()
-
+list_of_daily_mails, service, list_of_body, snippet = return_mails_and_service()
 
 
 class classes_of_mails(BaseModel):
@@ -20,7 +20,10 @@ class classes_of_mails(BaseModel):
 
 
 def load_client():
+    load_dotenv()  
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    if not GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY ortam değişkeni tanımlı değil!")
     client = genai.Client(api_key=GEMINI_API_KEY)
     return client
 
@@ -45,7 +48,7 @@ def classify_mail(mail_content):
     
     response = client.models.generate_content(
         model="gemini-2.0-flash",
-        contents='Give me information for the United States.',
+        contents='Give me class for mail',
         config=types.GenerateContentConfig(
             response_mime_type='application/json',
             response_schema=classes_of_mails,
@@ -56,8 +59,8 @@ def classify_mail(mail_content):
 
 
 def classify_main():
-    for mail in list_of_daily_mails:
-        response = classify_mail(mail)
+    for mail_body in list_of_body:
+        response = classify_mail(mail_body)
         print(response)
         
         

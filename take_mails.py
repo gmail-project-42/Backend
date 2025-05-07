@@ -1,25 +1,19 @@
 # Gerekli kütüphaneleri içe aktar
 import os
 import base64
-import json
 import re
 from google.oauth2.credentials import Credentials
-import google.auth
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 
-
-# Gmail API'sine erişim için gerekli izinler (sadece okuma izni)
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 list_of_daily_mails = []
 list_of_body = []
 list_of_snippets = []
-
-
 
 
 
@@ -41,10 +35,11 @@ def get_text_from_payload(payload):
 
 
 
-def authenticate_gmail():
+def authenticate_gmail(user_email):
     creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    token_file = f'token_{user_email}.json'
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
         if not set(SCOPES).issubset(set(creds.scopes)):
             creds = None
     if not creds or not creds.valid:
@@ -57,7 +52,7 @@ def authenticate_gmail():
         if not creds:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
+        with open(token_file, 'w') as token:
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
@@ -121,8 +116,16 @@ def take_daily_mails(service):
     
     service = authenticate_gmail()
     
-    today = datetime.now().strftime('%Y/%m/%d')
-    query = f'after:{today}'
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow = today + timedelta(days=1)
+
+    today_utc = today.astimezone(timezone.utc)
+    tomorrow_utc = tomorrow.astimezone(timezone.utc)
+
+    after_ts = int(today_utc.timestamp())
+    before_ts = int(tomorrow_utc.timestamp())
+
+    query = f'after:{after_ts} before:{before_ts}'
     results = service.users().messages().list(userId='me', q=query).execute()
     mails = results.get('messages', [])
     
@@ -141,20 +144,19 @@ def take_daily_mails(service):
             list_of_daily_mails.append(text)
             list_of_body.append(body)
             
-    return list_of_daily_mails, list_of_body, snippet
+    return list_of_daily_mails, list_of_body, list_of_snippets
 
 
 
 def return_mails_and_service():
     service = authenticate_gmail()
-    list_of_daily_mails, list_of_body, snippet = take_daily_mails(service)
-    return list_of_daily_mails, service, list_of_body, snippet
+    list_of_daily_mails, list_of_body, list_of_snippets = take_daily_mails(service)
+    return list_of_daily_mails, service, list_of_body, list_of_snippets
 
 
 
 if __name__ == "__main__":
-    list_of_daily_mails, service, list_of_body, snippet = return_mails_and_service()
-    #print(list_of_daily_mails)
-    #print(list_of_body[0])
-    print(list_of_snippets)
-    print("-"*50)
+    list_of_daily_mails, service, list_of_body, list_of_snippets = return_mails_and_service()
+    for l in list_of_snippets:
+        print(l)
+        print("-"*50)
