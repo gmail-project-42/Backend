@@ -9,35 +9,19 @@ from google.auth.transport.requests import Request
 from datetime import datetime, timedelta, timezone
 
 
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = [
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.send'
+]
 
 list_of_daily_mails = []
-list_of_body = []
 list_of_snippets = []
 
 
-
-
-def get_text_from_payload(payload):
-    if 'parts' in payload:
-        for part in payload['parts']:
-            if part['mimeType'] == 'text/plain':
-                data = part['body']['data']
-                return base64.urlsafe_b64decode(data).decode('utf-8')
-    elif payload['mimeType'] == 'text/plain':
-        data = payload['body']['data']
-        return base64.urlsafe_b64decode(data).decode('utf-8')
-    return None
-
-
-
-
-
-
-
-def authenticate_gmail(user_email):
+def authenticate_gmail():
+    
     creds = None
-    token_file = f'token_{user_email}.json'
+    token_file = f'token.json'
     if os.path.exists(token_file):
         creds = Credentials.from_authorized_user_file(token_file, SCOPES)
         if not set(SCOPES).issubset(set(creds.scopes)):
@@ -55,6 +39,19 @@ def authenticate_gmail(user_email):
         with open(token_file, 'w') as token:
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
+
+
+
+def get_text_from_payload(payload):
+    if 'parts' in payload:
+        for part in payload['parts']:
+            if part['mimeType'] == 'text/plain':
+                data = part['body']['data']
+                return base64.urlsafe_b64decode(data).decode('utf-8')
+    elif payload['mimeType'] == 'text/plain':
+        data = payload['body']['data']
+        return base64.urlsafe_b64decode(data).decode('utf-8')
+    return None
 
 
 
@@ -110,7 +107,6 @@ def get_body_from_payload(payload):
 def take_daily_mails(service):
     
     global list_of_daily_mails
-    global list_of_body
     global list_of_snippets
     
     
@@ -141,22 +137,19 @@ def take_daily_mails(service):
             text = get_text_from_payload(payload)
             body = get_body_from_payload(payload)
             list_of_snippets.append(snippet)
-            list_of_daily_mails.append(text)
-            list_of_body.append(body)
+            list_of_daily_mails.append({'id': msg_id, 'text': text, 'body': body, 'snippet': snippet, "date": today})
             
-    return list_of_daily_mails, list_of_body, list_of_snippets
+    return list_of_daily_mails, list_of_snippets, today
 
 
 
 def return_mails_and_service():
     service = authenticate_gmail()
-    list_of_daily_mails, list_of_body, list_of_snippets = take_daily_mails(service)
-    return list_of_daily_mails, service, list_of_body, list_of_snippets
+    list_of_daily_mails, list_of_snippets, today = take_daily_mails(service)
+    return list_of_daily_mails, service, list_of_snippets, today
 
 
 
 if __name__ == "__main__":
-    list_of_daily_mails, service, list_of_body, list_of_snippets = return_mails_and_service()
-    for l in list_of_snippets:
-        print(l)
-        print("-"*50)
+    list_of_daily_mails, service, list_of_snippets, today = return_mails_and_service()
+    print(today)

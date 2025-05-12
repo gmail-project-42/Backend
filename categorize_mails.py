@@ -4,10 +4,8 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 
-
+today = None
 categorized_mails  = []
-
-
 
 def connect_to_mongodb():
     load_dotenv()
@@ -16,28 +14,34 @@ def connect_to_mongodb():
     client = MongoClient(uri)
     db = client["Mail_Database"]
     collection = db["Mail"]
-    return collection 
+    return collection
 
 
 collection = connect_to_mongodb()
 
 
-def import_data_into_mongodb():
-    list_of_daily_mails, service, list_of_body, snippet = return_mails_and_service()
+def categorizer_mails():
     classifier = MailClassifier()
     global categorized_mails 
     global collection
+    global today
+    list_of_daily_mails, service, snippet, today = return_mails_and_service()
     
-    
-    for i, mail_body in enumerate(list_of_body):
-        result = classifier.classify_mail(mail_body)
+    for i, item in enumerate(list_of_daily_mails):
+        result = classifier.classify_mail(item['body'])
         mail_data = {
-            "body": mail_body,
+            "id": item['id'],
+            "text": item['text'],
+            "body": item['body'],
+            "snippet": item['snippet'],
+            "date": item['date'].strftime("%Y-%m-%d"),
             "predicted_class": result['predicted_class'],
             "confidence_score": result['confidence_score'],
             "all_scores": result['all_scores']
         }
         categorized_mails.append(mail_data)
-        
-if __name__ == "__main__":
-    connect_to_mongodb()
+
+
+if __name__ == "__main__" :
+    categorizer_mails()
+    print(categorized_mails)     

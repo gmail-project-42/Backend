@@ -2,6 +2,10 @@
 .env/
 /.env
 
+venv
+venv/
+/venv
+
 token.json
 /token.json
 token.json/
@@ -10,9 +14,6 @@ credentials.json
 /credentials.json
 credentials.json/
 
-test.py
-
-venvgmail/
 /__pycache__/
 __pycache__/
 

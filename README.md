@@ -1,53 +1,84 @@
-# Gmail Proje
+# Gmail Projesi
 
-Bu proje, Gmail API kullanarak e-postaları almak, sınıflandırmak ve yönetmek için geliştirilmiş bir Python uygulamasıdır.
+## Proje Hakkında
+
+Bu proje, Gmail API kullanarak e-postaları çeken, kategorize eden ve MongoDB'de saklayan bir Python uygulamasıdır. Proje, e-postaları otomatik olarak sınıflandırır ve REST API üzerinden erişilebilir hale getirir.
 
 ## Özellikler
 
-- Gmail API kullanarak günlük e-postaları alma
-- E-posta içeriklerini sınıflandırma
-  - Transformers kütüphanesi ile zero-shot sınıflandırma
-  - Google Gemini API ile sınıflandırma
-- E-posta gönderme
+- Gmail API entegrasyonu
+- E-posta otomatik kategorizasyonu
+- MongoDB veritabanı entegrasyonu
+- E-posta gönderme özelliği
+- Makine öğrenmesi tabanlı metin sınıflandırma
+- FastAPI ile REST API
+
+## Klasör Yapısı
+
+```
 
 ## Kurulum
 
-1. Gerekli kütüphaneleri yükleyin:
-   ```
-   pip install -r requirements.txt
-   ```
+1. Python sanal ortamı oluşturun ve aktifleştirin:
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac için
+# veya
+.\venv\Scripts\activate  # Windows için
+```
 
-2. Google Cloud Console'dan bir proje oluşturun ve Gmail API'yi etkinleştirin.
-3. `credentials.json` dosyasını indirin ve proje klasörüne yerleştirin.
-4. `.env` dosyasında Gemini API anahtarınızı ayarlayın.
+2. Gerekli paketleri yükleyin:
+```bash
+pip install -r requirements.txt
+```
+
+3. `.env` dosyasını oluşturun ve gerekli ortam değişkenlerini ekleyin:
+```
+MONGODB_PASSWORD=your_mongodb_password
+GEMINI_API_KEY = your_gemini_api_key
+
+```
 
 ## Kullanım
 
-### E-postaları Alma
-```python
-python take_mails.py
+1. Gmail API kimlik bilgilerini ayarlayın:
+   - Google Cloud Console'dan bir proje oluşturun
+   - Gmail API'yi etkinleştirin
+   - OAuth 2.0 kimlik bilgilerini oluşturun
+   - `token.json` dosyasını proje dizinine ekleyin
+
+2. Uygulamayı başlatın:
+```bash
+uvicorn api:app --reload
 ```
 
-### E-postaları Sınıflandırma
-```python
-python mail_classifier.py
-```
+## API Endpointleri
 
-veya 
+- `POST /mails/connect_mail`: Gmail hesabı ile bağlantı kurar
+- `POST /mails/import_data_into_mongodb`: E-postaları çeker ve MongoDB'ye kaydeder
+- `GET /mails/{category}`: Belirli bir kategorideki e-postaları getirir
+- `POST /mails/send_mail`: Yeni e-posta gönderir
 
-```python
-python classify.py
-```
+## Geliştirme
 
-### E-posta Gönderme
-```python
-python send_mail.py
-```
+Projeyi geliştirmek için:
 
-## Dosya Açıklamaları
+1. Yeni özellikler eklemek için bir branch oluşturun
+2. Değişikliklerinizi commit edin
+3. Pull request oluşturun
 
-- `mail_classifier.py`: Transformers kütüphanesi ile e-posta sınıflandırma
-- `take_mails.py`: Gmail API kullanarak e-postaları alma
-- `classify.py`: Google Gemini API ile e-posta sınıflandırma
-- `send_mail.py`: Gmail API kullanarak e-posta gönderme
-- `requirements.txt`: Gerekli Python kütüphaneleri 
+## Gereksinimler
+
+- Python 3.8+
+- MongoDB Atlas hesabı
+- Gmail hesabı
+- Google Cloud Console projesi
+
+## İletişim
+
+Sorularınız veya önerileriniz için:
+[khrmn8375@gmail.com](mailto:khrmn8375@gmail.com)
+
+## Lisans
+
+MIT
